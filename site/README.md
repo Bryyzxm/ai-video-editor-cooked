@@ -1,47 +1,128 @@
-# kembar — landing page
+# kembar landing page
 
-Static page for `kembar`, two locales (English at `/`, Indonesian at `/id/`), with a waitlist form.
-No build step, no framework, no server. Open `index.html` directly or serve the folder.
+Static page for `kembar`, the hosted editor, two locales (English at `/`, Indonesian at `/id/`),
+with an early-access form. No build step, no framework, no server.
 
 Contract: `../_bmad-output/specs/spec-landing-page-waitlist/SPEC.md`.
 Brand assets and rules: `../brand/README.md`.
+
+## What the page says
+
+The page sells one product, not a repository:
+
+- **Product.** One long take in. It removes the retakes, captions one word at a time, and puts the
+  real page on screen at the word that names it.
+- **Buyer.** Solo talking-head creators who post weekly and already pay for something.
+- **Status.** Early access, opened in small groups. No price is shown and there is no checkout, so
+  the page cannot promise either.
+- **No open-source copy.** There is no mention of a local install, a licence, a terminal or a
+  coding agent. Those belong to the repository's README, not this page.
+
+The trust section answers the seven complaints the market research found (credits burned by a
+failed render, a watermark at export, a duration cap, a style forced with no off switch). It does so
+as four policy statements. Keeping those four true is a product decision, not a copy decision.
 
 ## Files
 
 ```
 site/
-  index.html        English page
-  id/index.html     Indonesian page
-  assets/styles.css shared styles
-  assets/hero-bg.jpg      one real frame, upscaled and blurred: the hero backdrop
-  assets/*.jpg      real frames, resized copies of docs/screens/
-  assets/mark.svg         brand mark on the sky tile
-  assets/lockup-dark.svg  header lockup (mark + wordmark)
+  index.html             English page
+  id/index.html          Indonesian page
+  assets/styles.css      shared styles
+  assets/hero.mp4        the product shot: 12.7 s of a real edit, 640x1138
+  assets/hero.jpg        the poster: the first frame of that video
+  assets/proof-before.jpg    8 frames of the raw take, 1240x276
+  assets/proof-before-sm.jpg same at 720 px wide
+  assets/proof-after.jpg     8 frames of the same take after the edit
+  assets/proof-after-sm.jpg  same at 720 px wide
+  assets/card-page.jpg       the captured page, with the line marked
+  assets/card-motion.jpg     a diagram card built for one sentence
+  assets/card-counter.jpg    a logo with a counter climbing to the number
+  assets/og.jpg              1200x630 share card
+  assets/mark.svg        brand mark on the sky tile
+  assets/lockup-dark.svg header lockup (mark + wordmark)
   assets/lockup-light.svg for light surfaces
-  assets/favicon.svg      browser tab
-  _headers          Cloudflare Pages cache and security headers
+  assets/favicon.svg     browser tab
+  _headers               Cloudflare Pages cache and security headers
 ```
+
+Brand files are copies of `brand/`. Change the master, then copy.
+
+## Where the images come from
+
+Every proof frame is a frame from one real edit made by the editor:
+
+`/Users/bryyzxm/video_edit/edits/video-20261115-110838-2`
+
+The edit is a 50/50 split, 9:16, 34 seconds, rendered from `render-normalized.mp4`. The take it came
+from is `.source-cfr.mp4` in the same folder. Nothing on the page is a mockup, a stock frame or a
+generated screenshot, and the two strips are the same take before and after.
+
+Regenerate with `ffmpeg` (the frame times are chosen for the card each one shows):
+
+```
+E=/Users/bryyzxm/video_edit/edits/video-20261115-110838-2
+
+# the hero video: five moments, hard cut, no audio, 640x1138, about 950 KB
+ffmpeg -i $E/render-normalized.mp4 -filter_complex "\
+[0:v]trim=14.9:18.2,setpts=PTS-STARTPTS,scale=640:-2,fps=30[a];\
+[0:v]trim=0.9:4.2,setpts=PTS-STARTPTS,scale=640:-2,fps=30[b];\
+[0:v]trim=7.9:9.6,setpts=PTS-STARTPTS,scale=640:-2,fps=30[c];\
+[0:v]trim=22.2:24.6,setpts=PTS-STARTPTS,scale=640:-2,fps=30[d];\
+[0:v]trim=29.6:31.6,setpts=PTS-STARTPTS,scale=640:-2,fps=30[e];\
+[a][b][c][d][e]concat=n=5:v=1:a=0[out]" -map "[out]" \
+  -c:v libx264 -profile:v main -pix_fmt yuv420p -crf 30 -preset slow -movflags +faststart -an hero.mp4
+
+# the poster is the first frame of that video, so playback starts without a jump
+ffmpeg -i hero.mp4 -frames:v 1 -q:v 5 hero.jpg
+
+# share card
+ffmpeg -ss 14.9 -i $E/render-normalized.mp4 -frames:v 1 \
+  -vf "crop=1080:567:0:60,scale=1200:630" -q:v 4 og.jpg
+ffmpeg -ss 14.9 -i $E/render-normalized.mp4 -frames:v 1 \
+  -vf "crop=1080:567:0:60,scale=1200:630" -q:v 4 og.jpg
+
+# the three cards
+ffmpeg -ss 3.0  -i $E/render-normalized.mp4 -frames:v 1 -vf "crop=1080:675:0:60" -q:v 3 card-page.jpg
+ffmpeg -ss 14.9 -i $E/render-normalized.mp4 -frames:v 1 -vf "crop=1080:675:0:60" -q:v 3 card-motion.jpg
+ffmpeg -ss 30.1 -i $E/render-normalized.mp4 -frames:v 1 -vf "crop=1080:675:0:60" -q:v 3 card-counter.jpg
+
+# the two strips: 8 frames each, 155x276, tiled to 1240x276
+for t in 2 9 16 23 30 37 44 51; do ffmpeg -ss $t -i $E/.source-cfr.mp4 -frames:v 1 -q:v 2 "src/%02d.jpg"; done
+for t in 1.0 4.2 8.6 11.9 14.9 18.6 23.3 30.0; do ffmpeg -ss $t -i $E/render-normalized.mp4 -frames:v 1 -q:v 2 "ren/%02d.jpg"; done
+ffmpeg -framerate 1 -i src/%02d.jpg -vf "scale=155:276,tile=8x1" -frames:v 1 -q:v 4 proof-before.jpg
+ffmpeg -framerate 1 -i ren/%02d.jpg -vf "scale=155:276,tile=8x1" -frames:v 1 -q:v 4 proof-after.jpg
+sips -Z 720 -s formatOptions 46 proof-before.jpg --out proof-before-sm.jpg
+sips -Z 720 -s formatOptions 46 proof-after.jpg  --out proof-after-sm.jpg
+```
+
+The loop above overwrites `src/01.jpg` every time as written; give each iteration its own filename
+(the shipped files were made with a counter).
 
 ## The hero
 
-Full-bleed backdrop, floating nav pill, headline bottom left, a glass card on the right, and a facts
-rail along the bottom.
+Dark ink, headline on the left, one real 9:16 edit on the right, four facts along the bottom.
 
-- `assets/hero-bg.jpg` is a 720 px, 62 KB crop of one real frame from `docs/screens/`. It is blurred
-  18 px and scaled 1.16, so the resolution does not matter but the bytes do: it is the largest
-  paint on the page. Regenerate with
-  `sips -c 360 270 --cropOffset 0 0 docs/screens/after-talking-head.jpg --out /tmp/f1.jpg` then
-  `sips --resampleWidth 720 -s formatOptions 38 /tmp/f1.jpg --out site/assets/hero-bg.jpg`.
-- The glass card lists the six things a style is measured on. It shows no numbers, because no
-  measured numbers exist yet and inventing them would break the rule that proof is real.
-- The Indonesian headline gets a smaller size through `html[lang="id"] .hero h1`. Indonesian runs
-  about a fifth longer than English and at the English size it broke into four lines.
-- Below 860 px the glass card hides and below 560 px the facts rail hides. Both restate content from
-  "how it works" and "what exists today", and on a phone they pushed the before/after proof past the
-  first screen. Measured at 375 × 812: the Before strip sits at 577 px and the After at 663 px, both
-  above the fold.
-
-Brand files are copies of `brand/`. Change the master, then copy.
+- The right column is a muted, looping `assets/hero.mp4` (12.7 s, 640x1138, 947 KB) with
+  `assets/hero.jpg` as its poster. The poster is the first frame of the video, so there is no jump
+  when playback starts.
+- The poster is still the largest paint and sets the mobile LCP. Keep it under 50 KB.
+- Autoplay is muted and looping, which WCAG 2.2.2 allows only with a pause control, so there is one:
+  a 38 px button over the bottom-right corner that swaps between pause and play icons and updates its
+  accessible label. Under `prefers-reduced-motion: reduce` the video never starts and the button
+  reads Play.
+- The player also pauses itself when the hero scrolls out of view and resumes when it comes back,
+  unless the visitor paused it themselves.
+- No audio track ships, so nothing plays sound without a gesture.
+- The four facts carry the wedge rather than a licence: the real page, one word per caption, your
+  approval, and a switch on every automatic choice.
+- Below 860 px the shot sits under the copy at 300 px. Below 560 px it hides, and so does the facts
+  rail: both repeat what the proof strips and the sections say, and on a phone they pushed the strips
+  past the first screen. Measured at 375 × 812: the take strip starts at 540 px and the edit strip at
+  623 px, both above the fold. The player checks `offsetParent` before it calls `play()`, so a hidden
+  hero does not download the video on a phone.
+- The hero has no background photograph. The old one was a blurred frame behind a dark scrim; with a
+  real frame in the layout it only competed with the proof.
 
 ## Palette
 
@@ -52,22 +133,23 @@ Brand files are copies of `brand/`. Change the master, then copy.
 | `--paper` | `#FCFFFF` | Text |
 | `--muted` | `#93AEB9` | Secondary text, 7.6:1 on ink |
 | `--sky` | `#0593C6` | Eyebrows, links, focus, the emphasised word |
-| `--pink` | `#D83995` | The After chip only |
+| `--pink` | `#D83995` | The edit chip only |
 | `--pink-ink` | `#150008` | Text on pink, 5.2:1 |
-| `--media` | `#04121A` | Letterbox behind video frames |
+| `--media` | `#04121A` | Letterbox behind the frames |
 
 Contrast on `--ink`: sky 5.16:1, pink 4.51:1, muted 7.6:1. Pink sits at the limit, so it carries
-no small text — only the chip, whose text uses `--pink-ink`.
+no small text, only the chip, whose text uses `--pink-ink`.
 
 ## Before this goes live
 
-1. **Connect the waitlist.** Create a Buttondown account, then replace `YOUR-BUTTONDOWN-USERNAME`
-   in `site/index.html` and `site/id/index.html` (the form `action` and its `data-connect`
-   attribute). Until it is replaced the form refuses to submit and says so, on purpose — a waitlist
-   that silently loses signups is worse than one that is visibly off.
+1. **Connect the early-access list.** The form posts to Buttondown at
+   `https://buttondown.com/api/emails/embed-subscribe/bryyzxm` in both pages, with `data-connect`
+   set to the same username. Replace both if the account changes. Until it is set the form refuses
+   to submit and says so, on purpose: a list that silently loses signups is worse than one that is
+   visibly off.
 2. **Deploy.** Cloudflare Pages → connect the repo → root directory `site` → no build command,
    output directory `.` (or drag the `site` folder into a direct upload).
-3. **Add the domain**, then add these to both pages with fully qualified URLs — Google ignores
+3. **Add the domain**, then add these to both pages with fully qualified URLs. Google ignores
    relative `hreflang` and the audit fails because of it:
 
    ```html
@@ -81,40 +163,18 @@ no small text — only the chip, whose text uses `--pink-ink`.
    load, so `domain.com/?utm_source=tiktok` lands as `utm:tiktok` in Buttondown. Without a UTM the
    tag falls back to the referrer host, then `direct`.
 
-## Regenerating the image copies
-
-Images are resized from `docs/screens/` with `sips`. They are copies — replacing a screenshot in
-`docs/screens/` does not update the page.
-
-```
-sips -Z 1240 -s formatOptions 52 docs/screens/before-talking-head.jpg --out site/assets/before-talking-head.jpg
-sips -Z 720  -s formatOptions 50 docs/screens/before-talking-head.jpg --out site/assets/before-talking-head-sm.jpg
-sips -Z 1240 -s formatOptions 52 docs/screens/after-talking-head.jpg  --out site/assets/after-talking-head.jpg
-sips -Z 720  -s formatOptions 50 docs/screens/after-talking-head.jpg  --out site/assets/after-talking-head-sm.jpg
-sips -Z 820  -s formatOptions 68 docs/screens/after-product-video-1.jpg --out site/assets/product-video.jpg
-sips -Z 820  -s formatOptions 68 docs/screens/after-teardown.jpg       --out site/assets/teardown.jpg
-```
-
 ## How the languages work
 
 `/` is English and carries a small script: if the browser's first language is Indonesian and the
-visitor has never chosen a language, it sends them to `/id/`. `/id/` never redirects — so it stays
-linkable and indexable — and the `English` / `Bahasa Indonesia` links write a `kembar_lang` cookie
+visitor has never chosen a language, it sends them to `/id/`. `/id/` never redirects, so it stays
+linkable and indexable, and the `English` / `Bahasa Indonesia` links write a `kembar_lang` cookie
 that stops the redirect from overriding a deliberate choice.
 
 ## Measured
 
-Lighthouse 12, this folder served on `localhost`, 2026-11-13, after the rebrand. Performance moves
-a point between runs on an idle machine; everything else is stable.
-
-| | Performance | Accessibility | Best practices | SEO |
-|---|---|---|---|---|
-| Mobile (`/`) | 98 | 100 | 100 | 100 |
-| Mobile (`/id/`) | 97 | 100 | 100 | 100 |
-| Desktop | 100 | 100 | 100 | 100 |
-
-Mobile LCP 2.3 s (EN) and 2.6 s (ID), CLS 0, TBT 0 ms. No horizontal scroll at 375 px. The hero
-backdrop is the largest paint, so its byte size sets these numbers.
-
-Remaining flags are hosting-side and Cloudflare fixes them: text compression, long-lived asset
-caching (see `_headers`), and next-gen image formats.
+Not re-measured since the page was rewritten on 2026-11-15. The previous design, which shared this
+stylesheet and hosting, measured Lighthouse 12 at 98/100/100/100 on mobile English, 97/100/100/100 on
+mobile Indonesian and 100s on desktop, with mobile LCP 2.3 s. Re-run before launch. The weights now:
+poster 44 KB and the two strips at 20 KB each above the fold, CSS and SVG 13 KB, the 947 KB video
+streaming behind the poster, and 124 KB of cards deferred below it. The video is the one addition
+that could move a Lighthouse score, so measure with it playing and again with it paused.
