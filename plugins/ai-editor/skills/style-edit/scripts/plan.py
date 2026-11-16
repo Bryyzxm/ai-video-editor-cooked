@@ -728,16 +728,18 @@ def text_labels(cards, style):
 # zone's bottom line (y 1640); captions wait while it is up. The cta: a black pill with white type in the band above the head.
 TITLE_SIZE, TITLE_HOLD_S = 3.0, 3.8
 TITLE_BOTTOM = 100 - SAFE["9:16"][3] - 0.5
+TITLE_TOP = 10.0   # a style that fills style["hook"] opens with its title at the top of the frame, not on the chest
 CTA_Y, CTA_SIZE, CTA_HOLD_S = SAFE["9:16"][1] + 3, 5.2, 2.4
 LIST_X, LIST_SIZE = SAFE["9:16"][0] + 1, 1.8
 TEXT_KINDS = ("title", "list", "stamp")
 
 
-def text_items(visuals, words, duration, cards, face=None, cap_y=66.0, cap_size=None):
+def text_items(visuals, words, duration, cards, face=None, cap_y=66.0, cap_size=None, hook_cfg=None):
     """plan.json "texts" from visuals.json: a "title" (text, "\\n" between lines, emoji kept; on its word, else from 0 s,
     for hold_s), a "cta" (text, label?; on its word, for hold_s), a running numbered "list" (items: [{text, word, nth}], each on its word, all held to the list's word
     "until" or the end; its type never smaller than the captions', cap_size), a "stamp" (a red X over the card up on its
-    word). Every box inside the reels safe zone."""
+    word). Every box inside the reels safe zone. hook_cfg: the style's hook settings, which turn the opening title into
+    its top hook (size, y, hold, font, stroke, mark); a style without hook.size_pct keeps the chest title."""
     def at(word, nth=None):
         hits = [w["start"] for w in words if clean(w["text"]).lower() == clean(word or "").lower()]
         return hits[(nth or 1) - 1] if len(hits) >= (nth or 1) else None
@@ -750,9 +752,21 @@ def text_items(visuals, words, duration, cards, face=None, cap_y=66.0, cap_size=
                 print(f"warning: title '{v['text']}': '{v['word']}' is never said, skipped", file=sys.stderr)
                 continue
             start = max(0.0, t - CARD_LEAD_S) if t else 0.0
-            x = {"kind": "title", "text": v["text"], "start": round(start, 3), "end": round(min(duration, start + (v.get("hold_s") or TITLE_HOLD_S)), 3),
-                 "y_pct": 0, "size_pct": v.get("size_pct") or TITLE_SIZE}
-            x["y_pct"] = round(TITLE_BOTTOM - title_bottom(x), 1)
+            hk = hook_cfg or {}
+            if hk.get("size_pct") and start == 0.0:   # the opening title is this style's hook: top, its own size and hold
+                x = {"kind": "title", "text": v["text"], "start": 0.0,
+                     "end": round(min(duration, (hk.get("end_s") or TITLE_HOLD_S)), 3),
+                     "y_pct": hk.get("y_pct", TITLE_TOP), "size_pct": v.get("size_pct") or hk["size_pct"],
+                     "hook": True, "font": hk.get("font") or "Montserrat", "no_fade": True,
+                     "stroke_px": hk.get("stroke_em", 0.04), "stroke_color": hk.get("stroke_color") or "#0B0B0B"}
+                if hk.get("mark"):
+                    x["mark"] = hk["mark"]
+                if v.get("kicker"):
+                    x["kicker"] = v["kicker"]
+            else:
+                x = {"kind": "title", "text": v["text"], "start": round(start, 3), "end": round(min(duration, start + (v.get("hold_s") or TITLE_HOLD_S)), 3),
+                     "y_pct": 0, "size_pct": v.get("size_pct") or TITLE_SIZE}
+                x["y_pct"] = round(TITLE_BOTTOM - title_bottom(x), 1)
             out.append(x)
         elif k == "cta" and v.get("text") and v.get("word"):
             t = at(v["word"], v.get("nth"))
@@ -2645,7 +2659,7 @@ def build(style, words, meta, images=(), aspect="auto", cuts=(), visuals=(), edi
         extra["card_kinds"] = list(style["card_kinds"])
     if pictures_only(style) and card_rate(style):   # a card edit: check.py plan FAILs a gap over card_gap_s
         extra["card_rate"] = card_rate(style)
-    texts = text_items(visuals, words, duration, cards, face, cap["y_pct"], cap.get("size_pct"))
+    texts = text_items(visuals, words, duration, cards, face, cap["y_pct"], cap.get("size_pct"), style.get("hook"))
     if texts:
         extra["texts"] = texts
         # the title sits where the captions do: they wait until it has gone

@@ -61,6 +61,10 @@ single skill folders.
 
 ## Rules for every agent
 
+- For this kembar fork, follow [docs/UPSTREAM-SYNC.md](docs/UPSTREAM-SYNC.md) when
+  updating from NextWork. The production landing page belongs to
+  `Bryyzxm/kembar-site`; make landing page changes in that repository.
+
 - Never ask the user to paste an API key into the chat. Keys are saved with the commands the
   skills give, in the user's own terminal.
 - Ask before creating a GitHub repo or spending money on AWS.

@@ -1,0 +1,21 @@
+[
+  {"claim": "Cutprint measures a style from own videos plus admired creators into rules", "class": "feature", "pub_date": "2026-11"},
+  {"claim": "Ponder learns from reference videos and channels", "class": "feature", "pub_date": "2026-11"},
+  {"claim": "Lua learns the look of reels you love and records b-roll from the product site", "class": "feature", "pub_date": "2026-11"},
+  {"claim": "cutai is MIT with style-learn from multiple reference videos", "class": "feature", "pub_date": "2026-04"},
+  {"claim": "Descript consistency is Brand Studio and layout packs", "class": "feature", "pub_date": "2026-11"},
+  {"claim": "Submagic consistency is Brand Kit plus presets", "class": "feature", "pub_date": "2026-10"},
+  {"claim": "OpusClip US Pro is 29 monthly or 14.50 annual, 174 per year, 3600 credits, credits defined as one minute each", "class": "pricing", "pub_date": "2026-11"},
+  {"claim": "OpusClip pricing and credit allocation identical in June 2025, so no price cut and no metering tightening", "class": "pricing", "pub_date": "2025-06"},
+  {"claim": "Descript pricing unchanged since May 2025", "class": "pricing", "pub_date": "2026-11"},
+  {"claim": "Vizard states one credit equals one uploaded minute", "class": "pricing", "pub_date": "2026-11"},
+  {"claim": "Submagic caps per-video length at 2/5/30 minutes by tier", "class": "packaging", "pub_date": "2026-11"},
+  {"claim": "Lua charges 30/79/199 per month", "class": "pricing", "pub_date": "2026-11"},
+  {"claim": "Failed generations consume credits and retry costs more", "class": "sentiment", "pub_date": "2026-11"},
+  {"claim": "Advertised price differs from charged price at checkout", "class": "sentiment", "pub_date": "2026-10"},
+  {"claim": "Watermark appears at export or survives payment", "class": "sentiment", "pub_date": "2026-11"},
+  {"claim": "Tool imposes framing, captions or narrator it was not asked for", "class": "sentiment", "pub_date": "2026-10"},
+  {"claim": "A 10-minute per-video cap is named as blocking real work", "class": "sentiment", "pub_date": "2026-11"},
+  {"claim": "Captions mistimed after an update", "class": "sentiment", "pub_date": "2026-08"},
+  {"claim": "Cutwords and Clypmint claim style cloning without company or pricing", "class": "feature", "pub_date": "2026-11"}
+]

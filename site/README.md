@@ -140,28 +140,32 @@ Dark ink, headline on the left, one real 9:16 edit on the right, four facts alon
 Contrast on `--ink`: sky 5.16:1, pink 4.51:1, muted 7.6:1. Pink sits at the limit, so it carries
 no small text, only the chip, whose text uses `--pink-ink`.
 
-## Before this goes live
+## Deploy
 
-1. **Connect the early-access list.** The form posts to Buttondown at
-   `https://buttondown.com/api/emails/embed-subscribe/bryyzxm` in both pages, with `data-connect`
-   set to the same username. Replace both if the account changes. Until it is set the form refuses
-   to submit and says so, on purpose: a list that silently loses signups is worse than one that is
-   visibly off.
-2. **Deploy.** Cloudflare Pages → connect the repo → root directory `site` → no build command,
-   output directory `.` (or drag the `site` folder into a direct upload).
-3. **Add the domain**, then add these to both pages with fully qualified URLs. Google ignores
-   relative `hreflang` and the audit fails because of it:
+The page is a Cloudflare **Worker** named `kembar`, connected to `Bryyzxm/kembar-site`, serving
+`site/` as static assets at `https://kembar.web.id`. Push to `main` and the Worker builds; `_headers`
+is read from this folder.
 
-   ```html
-   <link rel="canonical" href="https://DOMAIN/">
-   <link rel="alternate" hreflang="en" href="https://DOMAIN/">
-   <link rel="alternate" hreflang="id" href="https://DOMAIN/id/">
-   ```
+Still open:
 
-   Use `https://DOMAIN/id/` as canonical on the Indonesian page.
-4. **UTM tags.** Every signup is tagged. The hidden `tag` field is filled from `?utm_source=` on
-   load, so `domain.com/?utm_source=tiktok` lands as `utm:tiktok` in Buttondown. Without a UTM the
-   tag falls back to the referrer host, then `direct`.
+- **`http://` does not redirect to `https://`.** Turn on Always Use HTTPS in SSL/TLS, Edge Certificates.
+- **`www.kembar.web.id` does not resolve.** Add it as a second custom domain on the Worker, then a
+  301 redirect rule from `www` to the apex.
+- **The early-access list is wired but unproven.** Submit an address on the live page and confirm the
+  Buttondown email arrives.
+
+The form posts to `https://buttondown.com/api/emails/embed-subscribe/bryyzxm` in both pages, with
+`data-connect` set to the same username. Replace both if the account changes. Never point it at
+`buttondown.email`: Indonesian ISP DNS resolves that domain to the Kominfo block page, so the form
+fails silently for local visitors. Until it is set the form refuses to submit and says so, on
+purpose: a list that silently loses signups is worse than one that is visibly off.
+
+**UTM tags.** Every signup is tagged. The hidden `tag` field is filled from `?utm_source=` on load,
+so `kembar.web.id/?utm_source=tiktok` lands as `utm:tiktok` in Buttondown. Without a UTM the tag
+falls back to the referrer host, then `direct`.
+
+Canonical, `hreflang`, `og:url`, `og:image`, `sitemap.xml` and `robots.txt` all use
+`https://kembar.web.id`.
 
 ## How the languages work
 
@@ -172,9 +176,11 @@ that stops the redirect from overriding a deliberate choice.
 
 ## Measured
 
-Not re-measured since the page was rewritten on 2026-11-15. The previous design, which shared this
-stylesheet and hosting, measured Lighthouse 12 at 98/100/100/100 on mobile English, 97/100/100/100 on
-mobile Indonesian and 100s on desktop, with mobile LCP 2.3 s. Re-run before launch. The weights now:
-poster 44 KB and the two strips at 20 KB each above the fold, CSS and SVG 13 KB, the 947 KB video
-streaming behind the poster, and 124 KB of cards deferred below it. The video is the one addition
-that could move a Lighthouse score, so measure with it playing and again with it paused.
+Not re-measured since the page was rewritten on 2026-11-15. The version before it, on the same
+Worker and `_headers`, measured Lighthouse 12 against the live site at 97/100/100/100 on mobile
+English, 99/100/100/100 on mobile Indonesian and 100s on desktop, with mobile LCP 2.6 s and 1.8 s.
+Re-run against the live domain before announcing.
+
+Weights now: poster 44 KB and the two strips at 20 KB each above the fold, CSS and SVG 13 KB, the
+947 KB video streaming behind the poster, and 124 KB of cards deferred below it. The video is the
+one addition that could move a performance score, so measure once with it playing and once paused.

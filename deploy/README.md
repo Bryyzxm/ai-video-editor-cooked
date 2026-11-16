@@ -1,5 +1,11 @@
 # Deploy
 
+> **Historical setup notes.** The production landing page now belongs to
+> `Bryyzxm/kembar-site`, whose `wrangler.toml` serves `site/` through the Cloudflare
+> Worker `kembar`. Use that repository for landing page changes. Do not connect
+> this editor fork to the landing page deployment. See
+> [the repository ownership and update procedure](../docs/UPSTREAM-SYNC.md).
+
 Target: Cloudflare Pages, connected to this repo, folder `site`.
 
 ## Order of operations
